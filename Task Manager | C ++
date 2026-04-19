@@ -1,0 +1,185 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <iomanip>
+#include <fstream>
+
+
+using namespace std;
+
+struct TASK
+{
+	int id;
+	string description;
+	bool status = false;
+};
+
+vector <TASK> tasks;
+int ID = 1;
+
+void loadTasks();
+void save_Task_toFile();
+void addTask();
+void viewTasks();
+void mark_TaskCompleted();
+void deleteTask();
+void displayMenu();
+
+int main()
+{
+	loadTasks();
+
+	cout << "|_______Task Manager_______|" << endl
+		<< endl
+		<< endl;
+	while (true)
+	{
+		displayMenu();
+		int choice;
+		cin >> choice;
+		cin.ignore();
+
+		switch (choice) {
+
+		case 1:
+			addTask();
+			break;
+		case 2:
+			viewTasks();
+			break;
+		case 3:
+			mark_TaskCompleted();
+			break;
+		case 4:
+			deleteTask();
+			break;
+		case 5:
+			return 0;
+		default:
+			cout << "Invalid choice. Please try again." << endl;
+		}
+
+	}
+}
+
+void loadTasks()
+{
+	ifstream file("Task.txt");
+	if (!file)
+		return;
+
+	TASK task;
+
+	while (file >> task.id)
+	{
+		file.ignore();
+		getline(file, task.description);
+		file >> task.status;
+		tasks.push_back(task);
+		if (task.id >= ID)
+			ID = task.id + 1;
+	}
+	file.close();
+}
+
+void save_Task_toFile()
+{
+	ofstream file("Task.txt");
+	for (const auto& task : tasks)
+	{
+		file << task.id << endl;
+		file << task.description << endl;
+		file << task.status << endl;
+	}
+	file.close();
+}
+
+void addTask()
+{
+	TASK new_task;
+	new_task.id = ID++;
+	cout << "Enter your the task: ";
+	getline(cin, new_task.description);
+	tasks.push_back(new_task);
+	save_Task_toFile();
+	cout << "List has been updated." << endl;
+}
+
+void viewTasks()
+{
+	if (tasks.empty())
+	{
+		cout << "You ae FREE!, there are no task for completion" << endl;
+		return;
+	}
+	cout << " ID | Task | Status" << endl;
+	cout << "--------------------------------" << endl;
+	for (const auto& task : tasks)
+	{
+		cout << task.id << "|" << left << setw(20) << task.description
+			<< " | " << (task.status ? "Done" : "Pending") << endl;
+	}
+
+}
+
+void mark_TaskCompleted()
+{
+	viewTasks();
+	int id; // Temporary varibale to store entry from the user. Used to compare with task IDs.
+
+	cout << "Enter the ID of the task to mark as completed: ";
+	cin >> id;
+
+	for (auto& task : tasks) // allows users to modify the task status directly in the vector.
+	{
+		if (task.id == id)
+		{
+			task.status = true;
+
+			save_Task_toFile();
+
+			cout << "Task no " << id << " marked as completed." << endl;
+			return;
+		}
+	}
+	cout << "No task found with ID " << id << "." << endl;
+}
+
+void deleteTask()
+{
+	viewTasks();
+	int id;
+
+	cout << "Enter the ID of the task to delete: ";
+	cin >> id;
+
+	for (auto it = tasks.begin(); it != tasks.end(); ++it)
+	{
+		if (it->id == id)
+		{
+			tasks.erase(it);
+			save_Task_toFile();
+			cout << " Done" << endl;
+			return;
+		}
+	}
+	cout << "No task found with ID " << id << "." << endl;
+}
+
+void displayMenu()
+{
+	cout << endl
+		<< "----------------------------" << endl
+		<< "1. Add Task" << endl
+		<< "----------------------------" << endl
+		<< "2. View Tasks" << endl
+		<< "----------------------------" << endl
+		<< "3. Update status" << endl
+		<< "----------------------------" << endl
+		<< "4. Delete Task" << endl
+		<< "----------------------------" << endl
+		<< "5. Exit" << endl
+		<< "----------------------------" << endl
+		<< endl
+		<< "Enter your choice: ";
+}
